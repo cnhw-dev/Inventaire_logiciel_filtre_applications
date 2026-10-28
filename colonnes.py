@@ -25,10 +25,14 @@ traitement s'interrompt AVANT toute écriture plutôt que de produire un
 résultat faux — même politique que les vérifications de total déjà
 présentes dans les scripts.
 
-Trois garanties sont fournies :
+Quatre garanties sont fournies :
 
 1. `index_colonnes` — résolution par nom, avec synonymes (par exemple
    « Ordinateur », « Nom d'hôte » et « Computer » désignent le même rôle) ;
+   toute AMBIGUÏTÉ est refusée : si deux colonnes distinctes de l'en-tête
+   correspondent au même rôle, une RuntimeError est levée plutôt que de
+   choisir silencieusement la première (risque apparu avec la colonne
+   « Usager » de l'extraction du 2026-10-26, distincte de « Utilisateur ») ;
 2. `valeur` — lecture défensive d'une ligne (retourne None si la colonne
    est absente de la ligne, au lieu de lever une IndexError) ;
 3. `aligner` — réordonne une ligne vers l'ordre d'un en-tête de référence,
@@ -59,7 +63,16 @@ SYNONYMES = {
     ),
     "utilisateur": (
         "utilisateur", "utilisateurs", "nom d'utilisateur", "nom de l'utilisateur",
-        "user", "username", "usager", "compte",
+        "user", "username", "compte",
+    ),
+    # « Usager » est un rôle DISTINCT de « utilisateur » depuis l'extraction
+    # du 2026-10-26 : les deux colonnes coexistent dans le classeur avec des
+    # contenus différents (p. ex. compte « carte@CNH » vs nom « Carte Acces »).
+    # La colonne est informative : aucun traitement ne s'y appuie, mais elle
+    # ne doit JAMAIS être synonyme de « utilisateur » — sinon sa position
+    # relative dans l'en-tête déterminerait silencieusement la colonne lue.
+    "usager": (
+        "usager", "usagers", "nom de l'usager", "nom d'usager",
     ),
     "department": (
         "department", "departement", "service", "direction",
@@ -97,18 +110,19 @@ def index_colonnes(entete, roles, onglet="?"):
     `onglet` : nom de l'onglet, uniquement pour les messages d'erreur.
 
     Retourne un dict {rôle: index}. Lève une RuntimeError si un rôle
-    demandé est absent de l'en-tête.
+    demandé est absent de l'en-tête, ou si PLUSIEURS colonnes de l'en-tête
+    correspondent au même rôle (ambiguïté : choisir la première
+    reviendrait à parier sur l'ordre des colonnes).
     """
     entete = list(entete or ())
     cles = [_norm_libelle(h) for h in entete]
     indices = {}
     for role in roles:
         attendus = libelles_attendus(role)
-        index = next(
-            (i for i, cle in enumerate(cles) if cle and cle in attendus),
-            None,
-        )
-        if index is None:
+        correspondances = [
+            i for i, cle in enumerate(cles) if cle and cle in attendus
+        ]
+        if not correspondances:
             lus = ", ".join(repr(h) for h in entete) if entete else "(vide)"
             raise RuntimeError(
                 f"Colonne « {role} » introuvable dans l'en-tête de l'onglet "
@@ -119,7 +133,19 @@ def index_colonnes(entete, roles, onglet="?"):
                 f"libellé compte.\n"
                 f"  Classeur NON modifié."
             )
-        indices[role] = index
+        if len(correspondances) > 1:
+            lus = ", ".join(
+                f"{entete[i]!r} (colonne {i + 1})" for i in correspondances
+            )
+            raise RuntimeError(
+                f"Colonne « {role} » ambiguë dans l'en-tête de l'onglet "
+                f"« {onglet} » : {len(correspondances)} colonnes y "
+                f"correspondent ({lus}).\n"
+                f"  Choisir la première reviendrait à parier sur l'ordre "
+                f"des colonnes — précisément ce que ce module interdit.\n"
+                f"  Classeur NON modifié."
+            )
+        indices[role] = correspondances[0]
     return indices
 
 

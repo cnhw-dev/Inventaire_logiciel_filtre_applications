@@ -11,6 +11,13 @@ Verrou également la migration du 2026-02-10 : « FortiClient » et
 « FortiMonitor Agent » doivent relever de la RÈGLE 3 (catégorie C) et non
 de la règle 1 ; « FortiToken » doit rester conservé (garde-fou).
 
+Verrou additionnel (2026-10-26) : la colonne « Usager » a été ajoutée au
+classeur réel, à titre informatif. Elle coexiste avec « Utilisateur »
+alors que leurs contenus diffèrent (compte, p. ex. « jdupont@cnh », vs
+nom d'affichage). Le test vérifie qu'elle traverse tout le traitement
+sans scramble et qu'elle n'est jamais confondue avec « Utilisateur »,
+même lorsqu'elle la précède dans l'en-tête.
+
 À lancer après toute modification de colonnes.py, d'une règle, ou du
 traitement : c'est le seul garde-fou contre une régression vers un accès
 aux colonnes par POSITION FIXE (row[0], row[1], ...), qui produirait des
@@ -32,62 +39,71 @@ import colonnes as col
 BASE_DIR = Path(__file__).resolve().parent
 
 # --- Ordres de colonnes volontairement différents et libellés synonymes ---
-# Rappel : l'ordre canonique du classeur réel est
-# Logiciel | Manufacturier | Ordinateur | Lieu | Utilisateur | Department
+# Rappel : l'ordre canonique du classeur réel est, depuis l'extraction du
+# 2026-10-26 : Department | Ordinateur | Utilisateur | Logiciel | Usager |
+# Lieu | Manufacturier. La colonne « Usager » (informative) a été ajoutée ;
+# son contenu diffère de « Utilisateur » (compte vs nom d'affichage).
 ORDRE_REEL = ["Logiciel", "Manufacturier", "Ordinateur", "Lieu",
-              "Utilisateur", "Department"]
+              "Utilisateur", "Usager", "Department"]
 
 # Les onglets ont chacun un ordre permutationné différent, et certains
 # utilisent des synonymes (Nom d'hôte, Fabricant, Application, Département).
+# « Usager » PRÉCÈDE volontairement « Utilisateur » dans deux variantes :
+# toute confusion entre les deux colonnes doit faire échouer le test.
 VARIANTES = [
     ["Logiciel", "Manufacturier", "Ordinateur", "Lieu", "Utilisateur",
-     "Department"],
-    ["Department", "Utilisateur", "Lieu", "Ordinateur", "Manufacturier",
-     "Logiciel"],
-    ["Application", "Fabricant", "Nom d'hôte", "Lieu", "Utilisateur",
-     "Département"],
-    ["Lieu", "Logiciel", "Utilisateur", "Department", "Ordinateur",
-     "Manufacturier"],
+     "Usager", "Department"],
+    ["Department", "Usager", "Utilisateur", "Lieu", "Ordinateur",
+     "Manufacturier", "Logiciel"],
+    ["Application", "Fabricant", "Nom d'hôte", "Usager", "Lieu",
+     "Utilisateur", "Département"],
+    ["Lieu", "Logiciel", "Usager", "Utilisateur", "Department",
+     "Ordinateur", "Manufacturier"],
 ]
+
+# Comptes « Usager » utilisés dans les lignes de test (distincts des noms
+# « Utilisateur », à l'image du classeur réel : p. ex. « carte@CNH »).
+COMPTES_USAGERS = {"jdupont@cnh", "mtroti@cnh", "atremblay@cnh",
+                   "bgagnon@cnh"}
 
 # Lignes sources, toujours exprimées dans l'ordre réel.
 LIGNES = {
     "Wahta": [
         ("7-Zip 23.01", "Igor Pavlov", "PC-WAHTA-01", "École Wahta'",
-         "jean.dupont", "TI"),
+         "jean.dupont", "jdupont@cnh", "TI"),
         ("Microsoft 365 Apps for business", "Microsoft Corporation",
-         "PC-WAHTA-01", "École Wahta'", "jean.dupont", "TI"),
+         "PC-WAHTA-01", "École Wahta'", "jean.dupont", "jdupont@cnh", "TI"),
         ("Autodesk AutoCAD 2024", "Autodesk", "PC-WAHTA-02",
-         "École Wahta'", "marc.troti", "TI"),
+         "École Wahta'", "marc.troti", "mtroti@cnh", "TI"),
         ("VLC media player", "VideoLAN", "PC-WAHTA-02", "École Wahta'",
-         "marc.troti", "TI"),
+         "marc.troti", "mtroti@cnh", "TI"),
         ("Adobe Acrobat Reader DC", "Adobe Inc.", "PC-WAHTA-02",
-         "École Wahta'", "marc.troti", "TI"),
+         "École Wahta'", "marc.troti", "mtroti@cnh", "TI"),
         # Doublon exact sur le même hôte : doit finir dans « Excluded Regle05 ».
         ("7-Zip 23.01", "Igor Pavlov", "PC-WAHTA-01", "École Wahta'",
-         "jean.dupont", "TI"),
+         "jean.dupont", "jdupont@cnh", "TI"),
     ],
     "TI": [
         ("FortiClient VPN", "Fortinet", "PC-TI-01", "Bureau TI",
-         "alice.tremblay", "TI"),
+         "alice.tremblay", "atremblay@cnh", "TI"),
         # FortiMonitor : previously in Regle01, moved to Regle03 (category C).
         # A regression test: if this ever goes back to Regle01, the removal in
         # _EXTRAS_SUBSTRINGS (Regle 1) has been undone.
         ("FortiMonitor Agent", "Fortinet", "PC-TI-01", "Bureau TI",
-         "alice.tremblay", "TI"),
+         "alice.tremblay", "atremblay@cnh", "TI"),
         # FortiToken is deliberately NOT targeted by any rule (garde-fou).
         ("FortiToken", "Fortinet", "PC-TI-01", "Bureau TI",
-         "alice.tremblay", "TI"),
+         "alice.tremblay", "atremblay@cnh", "TI"),
         ("Microsoft Teams", "Microsoft Corporation", "PC-TI-02", "Bureau TI",
-         "bob.gagnon", "TI"),
+         "bob.gagnon", "bgagnon@cnh", "TI"),
         ("Notepad++", "Notepad++ Team", "PC-TI-02", "Bureau TI",
-         "bob.gagnon", "TI"),
+         "bob.gagnon", "bgagnon@cnh", "TI"),
         # La règle 6 exige des libellés EXACTS (motifs ancrés) : on utilise
         # donc des noms réellement présents dans ses listes de motifs.
         ("Python 3.12 Executables", "Python Software Foundation",
-         "PC-TI-02", "Bureau TI", "bob.gagnon", "TI"),
+         "PC-TI-02", "Bureau TI", "bob.gagnon", "bgagnon@cnh", "TI"),
         ("Microsoft Windows Feature Experience Pack", "Microsoft Corporation",
-         "PC-TI-02", "Bureau TI", "bob.gagnon", "TI"),
+         "PC-TI-02", "Bureau TI", "bob.gagnon", "bgagnon@cnh", "TI"),
     ],
 }
 
@@ -139,7 +155,7 @@ def construire_classeur(chemin):
     # Onglet leurre : ignoré par les règles (préfixe « Excluded »).
     leurre = wb.create_sheet(LEURRE)
     leurre.append(ORDRE_REEL + ["Raison"])
-    leurre.append(["LEURRE"] * 6 + ["Ne doit jamais être traité"])
+    leurre.append(["LEURRE"] * len(ORDRE_REEL) + ["Ne doit jamais être traité"])
 
     # Dernier onglet de secteur : le traitement doit s'y arrêter.
     nd = wb.create_sheet("Non défini")
@@ -190,6 +206,7 @@ def verifier_resultats(chemin):
     try:
         exclus = {}   # {onglet d'exclusion: {logiciels}}
         entetes = {}  # {onglet d'exclusion: en-tête}
+        usagers = {}  # {onglet d'exclusion: {comptes « Usager »}}
         for nom in wb.sheetnames:
             if not nom.startswith("Excluded"):
                 continue
@@ -201,12 +218,19 @@ def verifier_resultats(chemin):
             # Résolution par libellé : c'est précisément ce que l'on teste.
             idx_log = col.index_colonnes(entete, ("logiciel",),
                                          onglet=nom)["logiciel"]
+            idx_usager = col.index_colonnes(entete, ("usager",),
+                                            onglet=nom)["usager"]
             ensemble = set()
+            comptes = set()
             for row in lignes:
                 v = col.valeur(row, idx_log)
                 if v:
                     ensemble.add(str(v).strip())
+                u = col.valeur(row, idx_usager)
+                if u:
+                    comptes.add(str(u).strip())
             exclus[nom] = ensemble
+            usagers[nom] = comptes
 
         echecs = []
 
@@ -245,13 +269,72 @@ def verifier_resultats(chemin):
             echecs.append(f"  Total de lignes exclues = {total_exclues} "
                           f"(attendu 9)")
 
+        # 5. La colonne « Usager » (informative, ajoutée le 2026-10-26) suit
+        #    chaque ligne sans scramble : toutes les valeurs des onglets
+        #    d'exclusion sont des comptes connus, jamais des noms
+        #    « Utilisateur » (ce qui prouverait un décalage de colonnes).
+        for nom, comptes in usagers.items():
+            if nom == LEURRE:
+                continue
+            inconnus = {u for u in comptes
+                        if u.casefold() not in COMPTES_USAGERS}
+            if inconnus:
+                echecs.append(f"  {nom} : valeurs « Usager » inattendues "
+                              f"(colonnes décalées ?) : {sorted(inconnus)}")
+
         return exclus, echecs
     finally:
         wb.close()
 
 
-def main():
+def verifier_resolution_usager():
+    """Verrouille la non-confusion entre « Utilisateur » et « Usager ».
+
+    Depuis l'extraction du 2026-10-26, les DEUX colonnes coexistent dans le
+    classeur réel avec des contenus différents (nom d'affichage vs compte).
+    « Usager » ne doit jamais être résolu comme « utilisateur », même
+    lorsqu'il le précède dans l'en-tête, et deux colonnes correspondant au
+    même rôle doivent être refusées (ambiguïté).
+    """
     echecs = []
+
+    # 1. Même si « Usager » précède « Utilisateur », chaque rôle vise la
+    #    bonne colonne.
+    entete = ["Usager", "Department", "Utilisateur", "Logiciel"]
+    idx = col.index_colonnes(entete, ("utilisateur", "usager"), onglet="test")
+    if entete[idx["utilisateur"]] != "Utilisateur":
+        echecs.append("  Rôle « utilisateur » résolu vers "
+                      f"{entete[idx['utilisateur']]!r} "
+                      "au lieu de « Utilisateur »")
+    if entete[idx["usager"]] != "Usager":
+        echecs.append(f"  Rôle « usager » résolu vers {entete[idx['usager']]!r} "
+                      "au lieu de « Usager »")
+
+    # 2. « Usager » seul NE résout PAS le rôle « utilisateur » : la colonne
+    #    n'est pas un synonyme, faute de quoi une extraction renommée
+    #    alimenterait silencieusement les traitements avec des comptes.
+    try:
+        col.index_colonnes(["Usager", "Logiciel"], ("utilisateur",),
+                           onglet="test")
+        echecs.append("  « Usager » résout le rôle « utilisateur » : "
+                      "confusion possible")
+    except RuntimeError:
+        pass  # comportement attendu : colonne introuvable
+
+    # 3. Deux colonnes correspondant au même rôle : refus (ambiguïté), plutôt
+    #    que de choisir silencieusement la première.
+    try:
+        col.index_colonnes(["Utilisateur", "Nom d'utilisateur", "Logiciel"],
+                           ("utilisateur",), onglet="test")
+        echecs.append("  Ambiguïté « utilisateur » non détectée")
+    except RuntimeError:
+        pass  # comportement attendu : ambiguïté signalée
+
+    return echecs
+
+
+def main():
+    echecs = verifier_resolution_usager()
     dossier = Path(tempfile.mkdtemp(prefix="verif_ordre_col_"))
     try:
         for nom in SCRIPTS:
