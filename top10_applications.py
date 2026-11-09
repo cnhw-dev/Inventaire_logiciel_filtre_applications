@@ -18,18 +18,14 @@ L'onglet « Top 10 » est inséré immédiatement après l'onglet « Sommaire »
 (ou à la fin du classeur si celui-ci est absent). S'il existe déjà, il
 est remplacé.
 
-Comportement (calqué sur appliquer_regle05.py) :
-1. Une copie de sauvegarde horodatée du classeur est créée avant toute
-   écriture (sauf en simulation).
-2. La progression est affichée à l'écran. Aucune intervention n'est requise.
+Comportement : la progression est affichée à l'écran. Aucune intervention
+n'est requise.
 
 Usage : py top10_applications.py --dry-run   # simulation (aucune écriture)
         py top10_applications.py             # exécution réelle
 """
 
 import argparse
-import shutil
-from datetime import datetime
 from pathlib import Path
 
 import openpyxl
@@ -176,13 +172,6 @@ def main():
         print(flush=True)
         print("Simulation (--dry-run) : aucune écriture effectuée.", flush=True)
         return
-
-    # Copie de sauvegarde horodatée avant écriture
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup = WORKBOOK.with_name(f"{WORKBOOK.stem}_backup_{stamp}.xlsx")
-    shutil.copy2(WORKBOOK, backup)
-    print(flush=True)
-    print(f"Copie de sauvegarde : {backup.name}", flush=True)
 
     ecrire_onglet(WORKBOOK, lignes)
     print(f"Onglet « {TOP10_SHEET} » écrit dans {WORKBOOK.name}.", flush=True)

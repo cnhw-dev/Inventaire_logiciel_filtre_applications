@@ -32,7 +32,7 @@ Aucune perte de données :
 - l'exécution de l'étape 1 est refusée si un onglet cible existe déjà
   (pas de risque d'écrasement ou de duplication en cas de réexécution);
 - une copie de sauvegarde horodatée du classeur est créée avant
-  toute exécution réelle (comme les scripts appliquer_regle0X.py);
+  toute exécution réelle (seul script de la chaîne à en créer une);
 - l'onglet « Non défini » est positionné en dernier dans le classeur
   (les scripts appliquer_regle0X.py traitent les onglets de secteurs
   jusqu'à « Non défini » inclusivement).

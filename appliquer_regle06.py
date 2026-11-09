@@ -60,10 +60,8 @@ Usage : py appliquer_regle06.py --dry-run   # simulation (aucune écriture)
 import argparse
 import gc
 import re
-import shutil
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 
 import openpyxl
@@ -270,12 +268,6 @@ def main():
     parser.add_argument("--dry-run", action="store_true",
                         help="Simulation : affiche les résultats sans modifier le classeur.")
     args = parser.parse_args()
-
-    if not args.dry_run:
-        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup = WORKBOOK.with_name(f"{WORKBOOK.stem}_backup_{stamp}.xlsx")
-        shutil.copy2(WORKBOOK, backup)
-        print(f"Copie de sauvegarde : {backup.name}", flush=True)
 
     # Étape 1 — analyse en lecture seule (rapide, peu de mémoire) :
     # liste détaillée des applications correspondantes et nombre de lignes

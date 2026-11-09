@@ -6,8 +6,9 @@ executer_traitement_complet.py — Exécute le traitement complet du classeur
 2. application des règles 1 à 6, en ordre croissant.
 
 Le traitement s'arrête immédiatement dès qu'un script retourne un code
-d'erreur. Aucun classeur de secours n'est créé ici : chaque script appelé
-effectue déjà sa propre copie de sauvegarde avant son exécution réelle.
+d'erreur. Aucun classeur de secours n'est créé ici : seul le premier script
+(deplacer_par_secteur.py) effectue une copie de sauvegarde du classeur
+avant son exécution réelle.
 
 Usage : py executer_traitement_complet.py
 """
@@ -103,7 +104,8 @@ def main():
     print(f"Dossier : {BASE_DIR}", flush=True)
     print(f"Lanceur : {py_launcher}", flush=True)
     print(f"Nombre d'étapes : {total}", flush=True)
-    print("Les sauvegardes sont créées par chacun des scripts appelés.", flush=True)
+    print("Copie de sauvegarde créée par le premier script seulement "
+          "(deplacer_par_secteur.py).", flush=True)
 
     debut_total = time.perf_counter()
     try:
