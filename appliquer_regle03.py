@@ -21,7 +21,8 @@ Comportement (conforme à Regle_03_outils_installes_par_defaut.md) :
 
 Correspondances visées (Règle 3) : 7-Zip, AI ExpertMeet (et Plugin),
 FortiClient (VPN), FortiMonitor Agent, VLC, Adobe Acrobat Reader DC (version
-gratuite), Antidote (incl. composantes Druide), ScreenConnect, FortiFone, VIA
+gratuite), Adobe Express Photos (installé par les mises à jour d'Acrobat),
+Antidote (incl. composantes Druide), ScreenConnect, FortiFone, VIA
 (RoomDevice, VIAApp), XeroxCorp, Yubico.
 
 Garde-fou (CONSERVÉES volontairement) :
@@ -30,8 +31,9 @@ Garde-fou (CONSERVÉES volontairement) :
   payant de la version gratuite, seule cette ligne est conservée en attente
   de confirmation (entrevues); « Adobe Acrobat (64-bit) » est exclu;
 - « FortiToken » : non listé par le MD (seul FortiFone est ciblé);
-- les composantes Adobe autres que celles du Reader gratuit (Photoshop,
-  Illustrator, Creative Cloud, etc.).
+- les composantes Adobe autres que celles du Reader gratuit et
+  « Adobe Express Photos » (Photoshop, Illustrator, Creative Cloud,
+  « Adobe Express » seul, etc.).
 
 Usage : py appliquer_regle03.py --dry-run   # simulation (aucune écriture)
         py appliquer_regle03.py             # exécution réelle
@@ -62,7 +64,7 @@ IGNORED = {"logiciels", "sommaire", "feuil1", "excluded regle01", "excluded regl
 CATEGORIES_LEGENDE = ("A=7-Zip, B=AI ExpertMeet, C=FortiClient(VPN)/Monitor, "
                       "D=VLC, E=FortiFone, F=ScreenConnect, "
                       "G=Antidote/Druide, H=VIA, I=Xerox, J=Yubico, "
-                      "K=Acrobat (64-bit) et Reader (gratuit)")
+                      "K=Acrobat (64-bit), Reader (gratuit), Express Photos")
 
 
 def _norm(value):
@@ -143,6 +145,9 @@ _YUBICO_SUBSTRINGS = (
 # --- K) Adobe Acrobat Reader DC (version gratuite) et composantes Reader ------
 # « Adobe Acrobat » est conservée (garde-fou); « Adobe Acrobat (64-bit) »
 # est exclu (une seule ligne représentative est conservée, cf. MD).
+# « Adobe Express Photos » est exclu : il est installé par les mises à jour
+# d'Acrobat (constaté le 2026-11-09), donc déployé de façon standard via un
+# outil TI; « Adobe Express » seul reste conservé (composante Adobe).
 _ACROBAT_EXACT = {
     "adobe acrobat (64-bit)",
 }
@@ -150,6 +155,7 @@ _ACROBAT_READER_SUBSTRINGS = (
     "acrobat reader",              # Adobe Acrobat Reader, - Français,
                                    # Asian Language Dictionaries Support For Adobe Acrobat Reader
     "reader notification client",  # composante du Reader gratuit (pub. Adobe)
+    "adobe express photos",        # installé par les mises à jour d'Acrobat
 )
 
 def match_rule3(logiciel, manufacturier):

@@ -20,7 +20,9 @@ même lorsqu'elle la précède dans l'en-tête.
 
 Verrou additionnel (2026-11-09) : le garde-fou Acrobat de la règle 3 est
 inversé — « Adobe Acrobat » (ligne représentative, écrite à l'identique)
-est conservée; « Adobe Acrobat (64-bit) » est exclue (catégorie K).
+est conservée; « Adobe Acrobat (64-bit) » est exclue (catégorie K), de
+même que « Adobe Express Photos » (installé par les mises à jour
+d'Acrobat); « Adobe Express » seul reste conservé (composante Adobe).
 
 À lancer après toute modification de colonnes.py, d'une règle, ou du
 traitement : c'est le seul garde-fou contre une régression vers un accès
@@ -105,6 +107,12 @@ LIGNES = {
          "alice.tremblay", "atremblay@cnh", "TI"),
         ("Adobe Acrobat (64-bit)", "Adobe Inc.", "PC-TI-01", "Bureau TI",
          "alice.tremblay", "atremblay@cnh", "TI"),
+        # « Adobe Express Photos » (installé par les mises à jour d'Acrobat)
+        # est exclue (catégorie K); « Adobe Express » seul est conservé.
+        ("Adobe Express Photos", "Adobe Inc.", "PC-TI-01", "Bureau TI",
+         "alice.tremblay", "atremblay@cnh", "TI"),
+        ("Adobe Express", "Adobe Inc.", "PC-TI-01", "Bureau TI",
+         "alice.tremblay", "atremblay@cnh", "TI"),
         ("Microsoft Teams", "Microsoft Corporation", "PC-TI-02", "Bureau TI",
          "bob.gagnon", "bgagnon@cnh", "TI"),
         ("Notepad++", "Notepad++ Team", "PC-TI-02", "Bureau TI",
@@ -133,10 +141,12 @@ ATTENDU = {
     "FortiClient VPN": "Excluded Regle03",
     "FortiMonitor Agent": "Excluded Regle03",
     "Adobe Acrobat (64-bit)": "Excluded Regle03",
+    "Adobe Express Photos": "Excluded Regle03",
     "Python 3.12 Executables": "Excluded Regle06",
     "Notepad++": None,        # application d'affaires : conservée
     "FortiToken": None,       # garde-fou : non ciblé par la règle 3
     "Adobe Acrobat": None,    # garde-fou règle 3 : ligne représentative conservée
+    "Adobe Express": None,    # composante Adobe : non ciblée (seul « Photos » l'est)
 }
 
 SCRIPTS = ("colonnes.py", "appliquer_regle01.py", "appliquer_regle02.py",
@@ -274,13 +284,13 @@ def verifier_resultats(chemin):
             if entete != attendu_entete:
                 echecs.append(f"  {nom} : en-tête {entete} != {attendu_entete}")
 
-        # 4. Aucune perte : 10 lignes distinctes doivent avoir été exclues
+        # 4. Aucune perte : 11 lignes distinctes doivent avoir été exclues
         #    (les lignes de « Wahta » sont traitées deux fois : dans l'onglet
         #     « Wahta » puis dans « Non défini »).
         total_exclues = sum(len(v) for n, v in exclus.items() if n != LEURRE)
-        if total_exclues != 10:
+        if total_exclues != 11:
             echecs.append(f"  Total de lignes exclues = {total_exclues} "
-                          f"(attendu 10)")
+                          f"(attendu 11)")
 
         # 5. La colonne « Usager » (informative, ajoutée le 2026-10-26) suit
         #    chaque ligne sans scramble : toutes les valeurs des onglets
