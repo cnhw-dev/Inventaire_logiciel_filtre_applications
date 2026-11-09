@@ -25,10 +25,10 @@ gratuite), Antidote (incl. composantes Druide), ScreenConnect, FortiFone, VIA
 (RoomDevice, VIAApp), XeroxCorp, Yubico.
 
 Garde-fou (CONSERVÉES volontairement) :
-- « Adobe Acrobat (64-bit) » : ligne représentative d'Acrobat présente dans
-  les 18 secteurs. Les données ne permettant pas de distinguer l'Acrobat
+- « Adobe Acrobat » : ligne représentative d'Acrobat (elle doit être écrite
+  à l'identique). Les données ne permettant pas de distinguer l'Acrobat
   payant de la version gratuite, seule cette ligne est conservée en attente
-  de confirmation (entrevues); « Adobe Acrobat » classique est exclu;
+  de confirmation (entrevues); « Adobe Acrobat (64-bit) » est exclu;
 - « FortiToken » : non listé par le MD (seul FortiFone est ciblé);
 - les composantes Adobe autres que celles du Reader gratuit (Photoshop,
   Illustrator, Creative Cloud, etc.).
@@ -62,7 +62,7 @@ IGNORED = {"logiciels", "sommaire", "feuil1", "excluded regle01", "excluded regl
 CATEGORIES_LEGENDE = ("A=7-Zip, B=AI ExpertMeet, C=FortiClient(VPN)/Monitor, "
                       "D=VLC, E=FortiFone, F=ScreenConnect, "
                       "G=Antidote/Druide, H=VIA, I=Xerox, J=Yubico, "
-                      "K=Acrobat Reader (gratuit)")
+                      "K=Acrobat (64-bit) et Reader (gratuit)")
 
 
 def _norm(value):
@@ -74,10 +74,10 @@ def _norm(value):
 
 
 # --- Garde-fou Acrobat : ligne représentative CONSERVÉE (vérifiée avant tout)
-# « Adobe Acrobat (64-bit) » est la ligne représentative d'Acrobat présente
-# dans les 18 secteurs; ne pas la confondre avec « adobe acrobat » (exact),
-# qui est exclu par la catégorie K.
-_KEEP_ACROBAT_EXACT = {"adobe acrobat (64-bit)"}
+# « Adobe Acrobat » est la ligne représentative d'Acrobat conservée (elle doit
+# être écrite à l'identique); ne pas la confondre avec
+# « adobe acrobat (64-bit) » (exact), qui est exclu par la catégorie K.
+_KEEP_ACROBAT_EXACT = {"adobe acrobat"}
 
 # --- A) 7-Zip ----------------------------------------------------------------
 _ZIP7_SUBSTRINGS = (
@@ -141,10 +141,10 @@ _YUBICO_SUBSTRINGS = (
 )
 
 # --- K) Adobe Acrobat Reader DC (version gratuite) et composantes Reader ------
-# « Adobe Acrobat (64-bit) » est conservée (garde-fou); « Adobe Acrobat »
-# classique est exclu (une seule ligne représentative est conservée, cf. MD).
+# « Adobe Acrobat » est conservée (garde-fou); « Adobe Acrobat (64-bit) »
+# est exclu (une seule ligne représentative est conservée, cf. MD).
 _ACROBAT_EXACT = {
-    "adobe acrobat",
+    "adobe acrobat (64-bit)",
 }
 _ACROBAT_READER_SUBSTRINGS = (
     "acrobat reader",              # Adobe Acrobat Reader, - Français,
@@ -160,8 +160,8 @@ def match_rule3(logiciel, manufacturier):
         return None
     pub = _norm(manufacturier)
 
-    # Garde-fou : « Adobe Acrobat (64-bit) » (ligne représentative présente
-    # sur tous les postes) est toujours conservée.
+    # Garde-fou : « Adobe Acrobat » (ligne représentative, écrite à
+    # l'identique) est toujours conservée.
     if name in _KEEP_ACROBAT_EXACT:
         return None
 

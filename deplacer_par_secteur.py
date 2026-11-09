@@ -2,12 +2,14 @@
 deplacer_par_secteur.py — Deux étapes de rangement du classeur
 « User_Workstation_App_Associations_Consolidated.xlsx » :
 
-Étape 1 — Déplace chaque ligne de l'onglet source « Logiciels_affaire* »
-vers un onglet de « secteur », selon la valeur de la colonne « Lieu ».
+Étape 1 — Déplace chaque ligne de l'onglet source vers un onglet de
+« secteur », selon la valeur de la colonne « Lieu ». L'onglet source est
+toujours le PREMIER onglet du classeur : son nom n'a pas de valeur fixe
+d'une extraction à l'autre (« Logiciels_affaire* », « Requête1 », ...).
 Regroupement (validé avec le répondant TI) : 18 onglets au total —
 17 secteurs + « Non défini » pour les lignes dont « Lieu » est vide
-ou « \\N ». Voir la table SECTEURS ci-dessous. L'étape est sautée si
-l'onglet source est absent (c.-à-d. déjà exécutée).
+ou « \\N ». Voir la table SECTEURS ci-dessous. L'étape est sautée si un
+onglet cible existe déjà dans le classeur (c.-à-d. déjà exécutée).
 
 Étape 2 — Reclasse les lignes de l'onglet « Non défini » dont la
 colonne « Department » est renseignée vers l'onglet du secteur
@@ -19,6 +21,9 @@ lignes sans « Department » (vide ou « \\N ») demeurent dans
 
 Aucune perte de données :
 - toutes les lignes sont déplacées, sans transformation;
+- les lignes strictement identiques à la ligne d'en-tête (artefact
+  d'extraction : en-tête répétée dans les données) sont ignorées —
+  elles ne transportent aucune donnée — et leur nombre est affiché;
 - toute valeur « Lieu » non cartographiée est signalée et envoyée dans
   un onglet portant son nom (tronqué à 31 caractères, limite Excel);
 - toute valeur « Department » non cartographiée est signalée et bloque
@@ -62,7 +67,6 @@ from colonnes import index_colonnes
 
 BASE_DIR = Path(__file__).resolve().parent
 WORKBOOK = BASE_DIR / "User_Workstation_App_Associations_Consolidated.xlsx"
-SOURCE_PREFIX = "Logiciels_affaire"
 NON_DEFINI = "Non défini"
 
 # Regroupement final validé : valeur « Lieu » -> onglet secteur.
@@ -160,29 +164,40 @@ def _onglet_secours(valeur, existants):
 def analyser():
     """Passe en lecture seule : classe les lignes par onglet cible.
 
+    L'onglet source est toujours le PREMIER onglet du classeur : son nom
+    n'a pas de valeur fixe d'une extraction à l'autre.
+
     Retourne (nom_source, en-tête, index Lieu, comptes, inconnues,
-    lignes_vides), ou None si l'onglet source est absent (étape 1 déjà
-    exécutée). Lève une exception si la colonne « Lieu » est
+    lignes_vides, entetes_dup), ou None si un onglet cible existe déjà
+    (étape 1 déjà exécutée — même critère que le refus d'écrasement
+    d'`appliquer`). Lève une exception si la colonne « Lieu » est
     introuvable.
     """
     wb = openpyxl.load_workbook(WORKBOOK, read_only=True)
     try:
-        source = next(
-            (ws for ws in wb.worksheets if ws.title.startswith(SOURCE_PREFIX)),
-            None,
-        )
-        if source is None:
+        if any(nom in wb.sheetnames for nom in ORDRE_ONGLETS):
             return None
+        source = wb.worksheets[0]
         lignes = source.iter_rows(values_only=True)
-        entete = next(lignes)
+        entete = next(lignes, None)
+        if entete is None:
+            raise RuntimeError(
+                f"Le premier onglet « {source.title} » est vide."
+            )
         # Résolution par libellé d'en-tête : l'ordre des colonnes peut varier
         # d'une extraction à l'autre (voir colonnes.py).
         idx_lieu = index_colonnes(entete, ("lieu",), onglet=source.title)["lieu"]
         comptes, inconnues = Counter(), Counter()
-        lignes_vides = 0
+        lignes_vides, entetes_dup = 0, 0
         for row in lignes:
             if all(c is None for c in row):
                 lignes_vides += 1
+                continue
+            # Artefact d'extraction : en-tête répétée dans les données.
+            # Une ligne strictement identique à l'en-tête ne transporte
+            # aucune donnée : on l'ignore, sans perte.
+            if row == entete:
+                entetes_dup += 1
                 continue
             norm = _norm(row[idx_lieu])
             if _est_non_defini(norm):
@@ -193,12 +208,15 @@ def analyser():
                     inconnues[row[idx_lieu]] += 1
                     cible = f"?? {row[idx_lieu]}"
                 comptes[cible] += 1
-        return source.title, entete, idx_lieu, comptes, inconnues, lignes_vides
+        return (
+            source.title, entete, idx_lieu, comptes, inconnues,
+            lignes_vides, entetes_dup,
+        )
     finally:
         wb.close()
 
 
-def afficher_distribution(comptes, inconnues, lignes_vides):
+def afficher_distribution(comptes, inconnues, lignes_vides, entetes_dup):
     """Affiche le tableau de distribution et retourne le total des lignes."""
     total = sum(comptes.values())
     print("\nDistribution des lignes par onglet cible :")
@@ -214,6 +232,11 @@ def afficher_distribution(comptes, inconnues, lignes_vides):
     print(f"  {'TOTAL':<25} {total:>10,} lignes".replace(",", " "))
     if lignes_vides:
         print(f"\n  ({lignes_vides} ligne(s) entièrement vide(s) ignorée(s))")
+    if entetes_dup:
+        print(
+            f"  ({entetes_dup} ligne(s) d'en-tête répétée(s) dans les "
+            "données ignorée(s))"
+        )
     if inconnues:
         print("\n  AVERTISSEMENT — valeurs « Lieu » non cartographiées :")
         for valeur, n in sorted(inconnues.items(), key=lambda kv: str(kv[0])):
@@ -247,6 +270,10 @@ def appliquer(nom_source, entete, idx_lieu, total_attendu):
         debut = time.time()
         for row in source.iter_rows(min_row=2, values_only=True):
             if all(c is None for c in row):
+                continue
+            # Même filtre qu'`analyser` : en-tête répétée dans les
+            # données (artefact d'extraction), aucune donnée perdue.
+            if row == entete:
                 continue
             lues += 1
             norm = _norm(row[idx_lieu])
@@ -423,21 +450,23 @@ def main():
 
     print(f"Classeur : {WORKBOOK.name}")
 
-    # Étape 1 : déplacement par « Lieu » (sautée si l'onglet source est
-    # absent, c.-à-d. si l'étape a déjà été exécutée).
+    # Étape 1 : déplacement par « Lieu » depuis le premier onglet du
+    # classeur (sautée si un onglet cible existe déjà, c.-à-d. si
+    # l'étape a déjà été exécutée).
     resultat1 = analyser()
     if resultat1 is None:
         print(
-            f"Aucun onglet « {SOURCE_PREFIX}* » : étape 1 déjà effectuée, "
+            "Un onglet cible existe déjà : étape 1 déjà effectuée, "
             "elle est sautée."
         )
     else:
-        nom_source, entete, idx_lieu, comptes, inconnues, vides = resultat1
+        (nom_source, entete, idx_lieu, comptes, inconnues, vides,
+         entetes_dup) = resultat1
         print(
             f"Onglet source : « {nom_source} » "
             f"(colonne « Lieu » : index {idx_lieu})"
         )
-        total1 = afficher_distribution(comptes, inconnues, vides)
+        total1 = afficher_distribution(comptes, inconnues, vides, entetes_dup)
 
     # Étape 2 : reclassement de « Non défini » par « Department ».
     resultat2 = analyser_departements()

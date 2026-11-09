@@ -21,7 +21,7 @@ Comportement (conforme à Regle_02_microsoft_standards.md) :
 
 Sont volontairement CONSERVÉES (garde-fou) les applications Microsoft qui ne
 font pas partie de la suite Office de base : Visio, Power BI, Visual Studio
-(Code), Microsoft Project, ainsi que Microsoft 365 Copilot.
+(Code), Microsoft Project.
 
 Usage : py appliquer_regle02.py --dry-run   # simulation (aucune écriture)
         py appliquer_regle02.py             # exécution réelle
@@ -58,10 +58,8 @@ def _norm(value):
 
 # --- Garde-fou : applications Microsoft hors suite de base (à CONSERVER) ----
 # Vérifié avant toute catégorie : si l'un de ces motifs est présent, la ligne
-# n'est jamais exclue par la Règle 2 (conforme au MD : Visio, Power BI,
-# Visual Studio Code; Microsoft 365 Copilot conservé explicitement).
-_KEEP_SUBSTRINGS = (
-    "microsoft 365 copilot",   # conservé explicitement par le MD
+# n'est jamais exclue par la Règle 2.
+_KEEP_SUBSTRINGS = (    
     "visio",
     "power bi",
     "powerbi",
@@ -72,7 +70,7 @@ _KEEP_SUBSTRINGS = (
 # --- A) Suite Office 365 / Microsoft 365 et composantes Microsoft Office ----
 _OFFICE_SUBSTRINGS = (
     "microsoft 365",           # Microsoft 365 - fr-fr, Apps for business/enterprise,
-                               # companion apps, Aplicaciones... (sauf 365 Copilot, voir garde-fou)
+                               # companion apps, Aplicaciones...
     "office 365",
     "microsoft office",        # Office 2016 (Pro Plus, MUI, Proofing, OSM,
                                # Access database engine, outils linguistiques FR/ES/DE/NL)
@@ -117,7 +115,7 @@ _WHITEBOARD_SUBSTRINGS = (
     "whiteboard",
 )
 
-# --- G) Copilot (sauf Microsoft 365 Copilot, voir garde-fou) -------------------
+# --- G) Copilot -------------------
 _COPILOT_SUBSTRINGS = (
     "copilot",                 # Copilot, Windows CoPilot MSIX Pack
 )
