@@ -28,6 +28,7 @@ SCRIPTS = (
     "appliquer_regle04.py",
     "appliquer_regle05.py",
     "appliquer_regle06.py",
+    "formatter_excel.py",
 )
 
 

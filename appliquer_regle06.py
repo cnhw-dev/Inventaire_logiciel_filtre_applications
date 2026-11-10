@@ -130,6 +130,8 @@ _MOTIFS = {
         # Composante AutoCAD dont le libellé ne contient ni « AutoCAD »
         # ni « Autodesk » : motif exact conservé (aucune occurrence dans
         # l'extraction actuelle, couvre les extractions futures).
+        "ACAD Private",
+        "Autodesk DWG TrueView 2026",  #viewver pour autocad
         "ACA & MEP 2022 Object Enabler",
     ],
     "Adobe": [

@@ -209,7 +209,6 @@ _EXTRAS_SUBSTRINGS = (
     "logi download assistant",
     "logitech unifying",               # Logiciel Logitech Unifying <version>
     "mozilla maintenance service",
-    "autodesk cer",
     "glpi agent",                      # GLPI Agent <version>
     # NOTE : « forticlient » et « fortimonitor » ont été RETIRÉS d'ici le
     # 2026-02-10. Ces outils sont déployés par les TI, pas livrés avec
