@@ -16,28 +16,43 @@ Correspondance :
 - la présence d'une étoile (*) dans un motif correspond à un « wildcard »
   (n'importe quelle chaîne de caractères, y compris vide);
 - sans étoile, la correspondance est exacte (après normalisation) : ainsi
-  « Autodesk App Manager » n'exclut que ce libellé exact, et les motifs
-  Citrix exigeant la parenthèse (« Citrix Receiver (* ») n'excluent pas
-  « Citrix Receiver 4.12 » ni « Citrix Workspace 2503/2507/2511 »;
+  « ACA & MEP 2022 Object Enabler » n'exclut que ce libellé exact, et les
+  motifs Citrix exigeant la parenthèse (« Citrix Receiver (* ») n'excluent
+  pas « Citrix Receiver 4.12 » ni « Citrix Workspace 2503/2507/2511 »;
 - normalisation : casse ignorée, apostrophes unifiées, espaces superflus
   réduits (« autodesk  access » = « Autodesk Access »);
 - les motifs Python se terminent par « * » afin de couvrir le suffixe
   « (64-bit) » des libellés réels (ex. « Python 3.11.0 Core Interpreter
   (64-bit) »).
 
+Familles AutoCAD et Autodesk — règle générale (décision du 2026-11-10,
+rebâtie sur le contenu du classeur actuel) :
+- TOUS les libellés contenant « AutoCAD » ou « Autodesk » sont EXCLUS
+  (motifs « *AutoCAD* » et « *Autodesk* »), SAUF deux applications
+  CONSERVÉES : « AutoCAD Open in Desktop » (seule application AutoCAD
+  conservée) et « Autodesk CER » (seule application Autodesk conservée);
+- conséquences validées avec l'utilisateur : « Autodesk Access »
+  (auparavant conservé) ainsi que les applications autonomes
+  « Autodesk DWG TrueView 2025/2026/2027 » et « Autodesk SketchBook »
+  sont désormais EXCLUES (règle littérale);
+- « ACA & MEP 2022 Object Enabler » (composante AutoCAD dont le libellé
+  ne contient ni « AutoCAD » ni « Autodesk ») demeure exclu par un motif
+  exact — aucune occurrence dans l'extraction actuelle, mais le motif
+  couvre les extractions futures;
+- « Adobe Genuine Service » est rangé dans la catégorie « Adobe » (sa
+  vraie famille) : le wildcard « *Autodesk* » ne le couvrirait pas, alors
+  que le MD le liste aussi sous « Autodesk »;
+- 21 applications Autodesk/AutoCAD distinctes ont été recensées dans le
+  classeur actuel : 19 exclues par ces motifs, 2 conservées. Le rapport
+  de l'étape 1 liste chacune des applications trouvées, ainsi que les
+  applications conservées rencontrées.
+
 Ajouts à la liste du MD (validés avec l'utilisateur) :
-- « AutoCAD LT 2026 - Français (French) », « Autodesk AutoCAD LT 2026 -
-  Français (French) » et « Autodesk CER » (équivalents LT/rapport d'erreurs
-  des composantes AutoCAD 2022 exclues);
 - « Citrix Browser Content Redirection Plug-in » (= « BCR Plug-in »);
 - « Python * Add to Path* » et « Python * Utility Scripts* »
   (« Python Launcher » est CONSERVÉ, décision de portée);
 - « Microsoft Windows Application Compatibility Fix Database »
   (composante système Microsoft).
-
-Retrait de la liste du MD (validé avec l'utilisateur) :
-- « Autodesk Access » est CONSERVÉ : bien que listé dans le MD, ce
-  composant (client de mise à jour Autodesk) ne doit pas être exclu.
 
 Comportement (calqué sur appliquer_regle05.py) :
 1. Génère d'abord la liste détaillée des applications correspondantes
@@ -104,27 +119,21 @@ def _compiler_motif(motif):
 # Manager » et « Citrix Web Helper » apparaissent en double dans le MD).
 _MOTIFS = {
     "Autodesk": [
+        # Règle générale (décision du 2026-11-10) : TOUTE la famille
+        # AutoCAD/Autodesk est exclue, SAUF les deux applications de
+        # _CONSERVES (« AutoCAD Open in Desktop », « Autodesk CER »).
+        # Ces wildcards couvrent aussi bien les variantes présentes dans
+        # le classeur actuel (versions, modules linguistiques, Access,
+        # TrueView, SketchBook, etc.) que les extractions futures.
+        "*AutoCAD*",
+        "*Autodesk*",
+        # Composante AutoCAD dont le libellé ne contient ni « AutoCAD »
+        # ni « Autodesk » : motif exact conservé (aucune occurrence dans
+        # l'extraction actuelle, couvre les extractions futures).
         "ACA & MEP 2022 Object Enabler",
-        "Adobe Genuine Service",  # aussi listé sous « Adobe » dans le MD
-        "Applications recommandées Autodesk",
-        "AutoCAD 2022 - Français (French)",
-        "AutoCAD 2022 Language Pack - Français (French)",
-        "AutoCAD LT 2026 - Français (French)",          # ajout validé
-        "AutoCAD Open in Desktop",
-        # « Autodesk Access » est CONSERVÉ (retiré de la liste du MD,
-        # décision de portée).
-        "Autodesk App Manager",
-        "Autodesk AutoCAD 2022 - Français (French)",
-        "Autodesk AutoCAD LT 2026 - Français (French)",  # ajout validé
-        "Autodesk CER",                                 # ajout validé
-        "Autodesk Genuine Service",
-        "Autodesk Identity Manager",
-        "Autodesk Material Library 2022",
-        "Autodesk Material Library Base Resolution Image Library 2022",
-        "Autodesk Single Sign On Component",
-        "Enregistrement Autodesk sur le Web et au format mobile",
     ],
     "Adobe": [
+        "Adobe Genuine Service",  # aussi listé sous « Autodesk » dans le MD
         "Adobe Native Client",
         "COCM_1_0_32",
         "COMP_1_4_32",
@@ -184,6 +193,14 @@ _MOTIFS = {
     ],
 }
 
+# Applications CONSERVÉES malgré les motifs généraux « *AutoCAD* » et
+# « *Autodesk* » (décision du 2026-11-10) : pour AutoCAD, seul
+# « AutoCAD Open in Desktop » est conservé; pour Autodesk, seul
+# « Autodesk CER » est conservé. Toute autre application de ces familles
+# est exclue.
+_CONSERVES_LIBELLES = ("AutoCAD Open in Desktop", "Autodesk CER")
+_CONSERVES = frozenset(_norm(libelle) for libelle in _CONSERVES_LIBELLES)
+
 _MOTIFS_COMPILES = [
     (categorie, motif, _compiler_motif(motif))
     for categorie, motifs in _MOTIFS.items()
@@ -192,9 +209,13 @@ _MOTIFS_COMPILES = [
 
 
 def _trouver_motif(logiciel):
-    """Retourne (catégorie, motif) du 1er motif correspondant, sinon None."""
+    """Retourne (catégorie, motif) du 1er motif correspondant, sinon None.
+
+    Les applications de _CONSERVES ne sont JAMAIS exclues, même si un
+    motif général (« *AutoCAD* », « *Autodesk* ») y correspond.
+    """
     texte = _norm(logiciel)
-    if not texte:
+    if not texte or texte in _CONSERVES:
         return None
     for categorie, motif, regex in _MOTIFS_COMPILES:
         if regex.match(texte):
@@ -208,24 +229,30 @@ def _analyser_lignes(lignes, cols):
     `cols` provient de colonnes.index_colonnes() : la colonne « logiciel »
     est résolue par son LIBELLÉ d'en-tête, jamais par une position fixe.
 
-    Retourne (indices, correspondances) où :
+    Retourne (indices, correspondances, conserves) où :
     - indices : liste des index de lignes à déplacer;
     - correspondances : {(catégorie, motif): {libellé: nb de lignes}}
-      pour le rapport détaillé.
+      pour le rapport détaillé;
+    - conserves : {libellé normalisé: nb de lignes} des applications de
+      _CONSERVES rencontrées (conservées malgré les motifs généraux).
     """
     indices = []
     correspondances = {}
+    conserves = {}
     idx_log = cols["logiciel"]
     for idx, row in lignes:
         logiciel = valeur(row, idx_log)
         trouve = _trouver_motif(logiciel)
         if trouve is None:
+            texte = _norm(logiciel)
+            if texte in _CONSERVES:
+                conserves[texte] = conserves.get(texte, 0) + 1
             continue
         indices.append(idx)
         libelle = str(logiciel).strip()
         par_libelle = correspondances.setdefault(trouve, {})
         par_libelle[libelle] = par_libelle.get(libelle, 0) + 1
-    return indices, correspondances
+    return indices, correspondances, conserves
 
 
 def _secteurs(sheetnames):
@@ -281,6 +308,7 @@ def main():
         header = None
         compteurs = {}           # {onglet: nb de lignes à déplacer}
         corresp_par_onglet = {}  # {onglet: {(catégorie, motif): {libellé: nb}}}
+        conserves_par_onglet = {}  # {onglet: {libellé normalisé: nb}}
         entetes = {}             # {onglet: en-tête d'origine}
         index_par_onglet = {}    # {onglet: index des colonnes requises}
         for sheet_name in secteurs:
@@ -296,10 +324,11 @@ def main():
                 if header is None:
                     header = list(entete)
             lignes = list(enumerate(lignes_it, start=2))
-            indices, corresp = _analyser_lignes(lignes,
-                                                index_par_onglet[sheet_name])
+            indices, corresp, conserves = _analyser_lignes(
+                lignes, index_par_onglet[sheet_name])
             compteurs[sheet_name] = len(indices)
             corresp_par_onglet[sheet_name] = corresp
+            conserves_par_onglet[sheet_name] = conserves
     finally:
         wb.close()
         del wb
@@ -312,6 +341,10 @@ def main():
             dest = globales.setdefault(cle, {})
             for libelle, nb in par_libelle.items():
                 dest[libelle] = dest.get(libelle, 0) + nb
+    conserves_globales = {}  # {libellé normalisé: nb de lignes total}
+    for conserves in conserves_par_onglet.values():
+        for texte, nb in conserves.items():
+            conserves_globales[texte] = conserves_globales.get(texte, 0) + nb
 
     print("\nListe détaillée des applications exclues "
           "(par catégorie et motif) :")
@@ -327,6 +360,15 @@ def main():
                   f"{len(par_libelle)} application(s) distincte(s)")
             for libelle in sorted(par_libelle, key=str.casefold):
                 print(f"      « {libelle} » — {par_libelle[libelle]} ligne(s)")
+
+    print("\nApplications CONSERVÉES (exceptions à la règle générale "
+          "AutoCAD/Autodesk) :")
+    for libelle in _CONSERVES_LIBELLES:
+        nb = conserves_globales.get(_norm(libelle), 0)
+        if nb:
+            print(f"  « {libelle} » : {nb} ligne(s) conservée(s)")
+        else:
+            print(f"  « {libelle} » : aucune occurrence dans le classeur")
 
     total_planned = sum(compteurs.values())
     print("\nLignes à déplacer par onglet :")
@@ -368,8 +410,8 @@ def main():
             ws = wb[sheet_name]
             lignes = list(enumerate(ws.iter_rows(min_row=2, values_only=True),
                                     start=2))
-            indices, _corresp = _analyser_lignes(lignes,
-                                                 index_par_onglet[sheet_name])
+            indices, _corresp, _cons = _analyser_lignes(
+                lignes, index_par_onglet[sheet_name])
             valeurs_par_idx = {idx: row for idx, row in lignes}
             matches = [(idx, valeurs_par_idx[idx]) for idx in indices]
 
