@@ -28,24 +28,16 @@ Correspondance :
 Familles AutoCAD et Autodesk — règle générale (décision du 2026-11-10,
 rebâtie sur le contenu du classeur actuel) :
 - TOUS les libellés contenant « AutoCAD » ou « Autodesk » sont EXCLUS
-  (motifs « *AutoCAD* » et « *Autodesk* »), SAUF deux applications
+  (motifs « *AutoCAD* » et « *Autodesk* »), SAUF trois applications
   CONSERVÉES : « AutoCAD Open in Desktop » (seule application AutoCAD
-  conservée) et « Autodesk CER » (seule application Autodesk conservée);
-- conséquences validées avec l'utilisateur : « Autodesk Access »
-  (auparavant conservé) ainsi que les applications autonomes
-  « Autodesk DWG TrueView 2025/2026/2027 » et « Autodesk SketchBook »
-  sont désormais EXCLUES (règle littérale);
+  conservée), « Autodesk DWG TrueView » (viewer d'AutoCAD) et « Autodesk CER » (seule application Autodesk conservée);
 - « ACA & MEP 2022 Object Enabler » (composante AutoCAD dont le libellé
   ne contient ni « AutoCAD » ni « Autodesk ») demeure exclu par un motif
   exact — aucune occurrence dans l'extraction actuelle, mais le motif
   couvre les extractions futures;
 - « Adobe Genuine Service » est rangé dans la catégorie « Adobe » (sa
   vraie famille) : le wildcard « *Autodesk* » ne le couvrirait pas, alors
-  que le MD le liste aussi sous « Autodesk »;
-- 21 applications Autodesk/AutoCAD distinctes ont été recensées dans le
-  classeur actuel : 19 exclues par ces motifs, 2 conservées. Le rapport
-  de l'étape 1 liste chacune des applications trouvées, ainsi que les
-  applications conservées rencontrées.
+  que le MD le liste aussi sous « Autodesk ».
 
 Ajouts à la liste du MD (validés avec l'utilisateur) :
 - « Citrix Browser Content Redirection Plug-in » (= « BCR Plug-in »);
@@ -120,18 +112,15 @@ def _compiler_motif(motif):
 _MOTIFS = {
     "Autodesk": [
         # Règle générale (décision du 2026-11-10) : TOUTE la famille
-        # AutoCAD/Autodesk est exclue, SAUF les deux applications de
-        # _CONSERVES (« AutoCAD Open in Desktop », « Autodesk CER »).
+        # AutoCAD/Autodesk est exclue, SAUF les trois applications de
+        # _CONSERVES.
         # Ces wildcards couvrent aussi bien les variantes présentes dans
-        # le classeur actuel (versions, modules linguistiques, Access,
-        # TrueView, SketchBook, etc.) que les extractions futures.
+        # le classeur actuel que les extractions futures.
         "*AutoCAD*",
         "*Autodesk*",
         # Composante AutoCAD dont le libellé ne contient ni « AutoCAD »
-        # ni « Autodesk » : motif exact conservé (aucune occurrence dans
-        # l'extraction actuelle, couvre les extractions futures).
+        # ni « Autodesk » : motif exact conservé.
         "ACAD Private",
-        "Autodesk DWG TrueView 2026",  #viewver pour autocad
         "ACA & MEP 2022 Object Enabler",
     ],
     "Adobe": [
@@ -197,11 +186,11 @@ _MOTIFS = {
 
 # Applications CONSERVÉES malgré les motifs généraux « *AutoCAD* » et
 # « *Autodesk* » (décision du 2026-11-10) : pour AutoCAD, seul
-# « AutoCAD Open in Desktop » est conservé; pour Autodesk, seul
-# « Autodesk CER » est conservé. Toute autre application de ces familles
-# est exclue.
-_CONSERVES_LIBELLES = ("AutoCAD Open in Desktop", "Autodesk CER")
-_CONSERVES = frozenset(_norm(libelle) for libelle in _CONSERVES_LIBELLES)
+# « AutoCAD Open in Desktop » et « Autodesk DWG TrueView* » sont conservés;
+# pour Autodesk, seul « Autodesk CER » est conservé. Toute autre application
+# de ces familles est exclue. Le caractère « * » est un wildcard supporté.
+_CONSERVES_LIBELLES = ("AutoCAD Open in Desktop", "Autodesk DWG TrueView*", "Autodesk CER")
+_CONSERVES_COMPILES = tuple(_compiler_motif(libelle) for libelle in _CONSERVES_LIBELLES)
 
 _MOTIFS_COMPILES = [
     (categorie, motif, _compiler_motif(motif))
@@ -210,14 +199,29 @@ _MOTIFS_COMPILES = [
 ]
 
 
+def _libelle_conserve(logiciel):
+    """Retourne le libellé original de conservation si `logiciel` y correspond
+    (wildcard « * » supporté), sinon None."""
+    texte = _norm(logiciel)
+    if not texte:
+        return None
+    for libelle, regex in zip(_CONSERVES_LIBELLES, _CONSERVES_COMPILES):
+        if regex.match(texte):
+            return libelle
+    return None
+
+
 def _trouver_motif(logiciel):
     """Retourne (catégorie, motif) du 1er motif correspondant, sinon None.
 
     Les applications de _CONSERVES ne sont JAMAIS exclues, même si un
-    motif général (« *AutoCAD* », « *Autodesk* ») y correspond.
+    motif général (« *AutoCAD* », « *Autodesk* ») y correspond. Le
+    caractère « * » est supporté dans les libellés de conservation.
     """
+    if _libelle_conserve(logiciel) is not None:
+        return None
     texte = _norm(logiciel)
-    if not texte or texte in _CONSERVES:
+    if not texte:
         return None
     for categorie, motif, regex in _MOTIFS_COMPILES:
         if regex.match(texte):
@@ -244,11 +248,12 @@ def _analyser_lignes(lignes, cols):
     idx_log = cols["logiciel"]
     for idx, row in lignes:
         logiciel = valeur(row, idx_log)
+        conserve_libelle = _libelle_conserve(logiciel)
+        if conserve_libelle is not None:
+            conserves[conserve_libelle] = conserves.get(conserve_libelle, 0) + 1
+            continue
         trouve = _trouver_motif(logiciel)
         if trouve is None:
-            texte = _norm(logiciel)
-            if texte in _CONSERVES:
-                conserves[texte] = conserves.get(texte, 0) + 1
             continue
         indices.append(idx)
         libelle = str(logiciel).strip()
@@ -366,7 +371,7 @@ def main():
     print("\nApplications CONSERVÉES (exceptions à la règle générale "
           "AutoCAD/Autodesk) :")
     for libelle in _CONSERVES_LIBELLES:
-        nb = conserves_globales.get(_norm(libelle), 0)
+        nb = conserves_globales.get(libelle, 0)
         if nb:
             print(f"  « {libelle} » : {nb} ligne(s) conservée(s)")
         else:
