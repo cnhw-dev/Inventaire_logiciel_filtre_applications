@@ -1,6 +1,7 @@
 ```
 Règle 3 — Exclure les outils installés par défaut sur les ordinateurs
 Exclure les applications et outils qui sont installés par défaut sur les ordinateurs ou déployés de façon standard par les TI : 
+- 1Password;
 - 7-Zip;
 - AI ExpertMeet;
 - AI ExpertMeet Plugin;

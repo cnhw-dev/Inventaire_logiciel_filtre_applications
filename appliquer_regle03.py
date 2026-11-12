@@ -23,7 +23,7 @@ Correspondances visées (Règle 3) : 7-Zip, AI ExpertMeet (et Plugin),
 FortiClient (VPN), FortiMonitor Agent, VLC, Adobe Acrobat Reader DC (version
 gratuite), Adobe Express Photos (installé par les mises à jour d'Acrobat),
 Antidote (incl. composantes Druide), ScreenConnect, FortiFone, VIA
-(RoomDevice, VIAApp), XeroxCorp, Yubico.
+(RoomDevice, VIAApp), XeroxCorp, Yubico, 1Password.
 
 Garde-fou (CONSERVÉES volontairement) :
 - « Adobe Acrobat » : ligne représentative d'Acrobat (elle doit être écrite
@@ -62,7 +62,8 @@ IGNORED = {"logiciels", "sommaire", "feuil1", "excluded regle01", "excluded regl
 CATEGORIES_LEGENDE = ("A=7-Zip, B=AI ExpertMeet, C=FortiClient(VPN)/Monitor, "
                       "D=VLC, E=FortiFone, F=ScreenConnect, "
                       "G=Antidote/Druide, H=VIA, I=Xerox, J=Yubico, "
-                      "K=Acrobat (64-bit), Reader (gratuit), Express Photos")
+                      "K=Acrobat (64-bit), Reader (gratuit), Express Photos, "
+                      "L=1Password")
 
 
 def _norm(value):
@@ -156,6 +157,12 @@ _ACROBAT_READER_SUBSTRINGS = (
     "adobe express photos",        # installé par les mises à jour d'Acrobat
 )
 
+# --- L) 1Password --------------------------------------------------------------
+# « 1Password » et « 1Password CLI » sont déployés de façon standard par les TI.
+_ONEPASSWORD_SUBSTRINGS = (
+    "1password",             # capte « 1Password » et « 1Password CLI »
+)
+
 def match_rule3(logiciel, manufacturier):
     """Retourne la catégorie ('A' à 'K') si la ligne correspond à la
     Règle 3, sinon None."""
@@ -193,7 +200,9 @@ def match_rule3(logiciel, manufacturier):
     if any(s in name for s in _YUBICO_SUBSTRINGS):
         return "J"
     if name in _ACROBAT_EXACT or any(s in name for s in _ACROBAT_READER_SUBSTRINGS):
-        return "K"
+        return "K"    
+    if any(s in name for s in _ONEPASSWORD_SUBSTRINGS):
+        return "L"
     return None
 
 

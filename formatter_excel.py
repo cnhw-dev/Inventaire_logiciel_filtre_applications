@@ -71,8 +71,8 @@ IGNORED = {"logiciels", "sommaire", "feuil1", "top 10",
 # « Department », puis « Utilisateur », « Ordinateur » et « Logiciel ».
 ROLES_TRI = ("department", "utilisateur", "hote", "logiciel")
 
-# Style appliqué aux tableaux créés (style bleu standard d'Excel).
-TABLE_STYLE = "TableStyleMedium9"
+# Style appliqué aux tableaux créés (« Blanc, Style de tableau clair 8 »).
+TABLE_STYLE = "TableStyleLight8"
 
 APERCU_LIGNES = 3  # nombre de lignes d'aperçu affichées par onglet
 
