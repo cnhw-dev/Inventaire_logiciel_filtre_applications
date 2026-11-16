@@ -292,6 +292,7 @@ _EXTRAS_EXACT = {
     "bonjour",
     "flux du portail captif",
     "microsoft teams (personal)",
+    "photos",   # Microsoft Photos ajouté en octobre 2026
     "remote help",
     "udk package",
     "visionneuse web de l'application de bureau",
