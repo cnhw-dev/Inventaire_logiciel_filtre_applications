@@ -45,6 +45,9 @@ Ajouts à la liste du MD (validés avec l'utilisateur) :
   (« Python Launcher » est CONSERVÉ, décision de portée);
 - « Microsoft Windows Application Compatibility Fix Database »
   (composante système Microsoft).
+- « ArcGIS Pro - Module linguistique* » (trait d’union « - »);
+- « ArcGIS Pro – Module linguistique* » (tiret long « – »);
+- « ArcGIS Pro 3.6 Patch* ».
 
 Comportement (calqué sur appliquer_regle05.py) :
 1. Génère d'abord la liste détaillée des applications correspondantes
@@ -181,6 +184,13 @@ _MOTIFS = {
         "Microsoft MicrosoftJournal",
         "SnippingTool-ee6eb196-db28-4d99-816d-fa9a63b4a377",
         "TechSmith Screen Capture Codec",
+    ],
+    "ArcGIS": [
+        # Trait d’union « - » vs tiret long « – » : deux libellés distincts,
+        # à ne pas confondre (la normalisation ne les unifie pas).
+        "ArcGIS Pro - Module linguistique*",
+        "ArcGIS Pro – Module linguistique*",
+        "ArcGIS Pro 3.6 Patch*",
     ],
 }
 

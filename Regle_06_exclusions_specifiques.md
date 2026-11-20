@@ -75,6 +75,12 @@ Autres :
 - SnippingTool-ee6eb196-db28-4d99-816d-fa9a63b4a377
 - TechSmith Screen Capture Codec
 
+ArcGIS :
+- ArcGIS Pro - Module linguistique*
+- ArcGIS Pro – Module linguistique*
+- ArcGIS Pro 3.6 Patch*
+Note : le trait d’union « - » et le tiret long « – » sont deux caractères distincts ; ils ne sont pas considérés comme équivalents.
+
 Important - Méthode de traitement : 
 L'onglet « Excluded Regle[numéro] » ([numéro] correspond au numéro de la règle) est créé une seule fois; toute ligne retirée d'un onglet de secteur doit s'y retrouver sans transformation (aucune perte de données).
 La présence d'une étoile (*) correspond à un "wildcard characters" (n'importe quelle chaine de caractères).
