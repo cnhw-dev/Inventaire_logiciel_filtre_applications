@@ -143,8 +143,7 @@ _INBOX_SUBSTRINGS = (
     "local experience pack",
     "speech pack",
     "speech translation pack",
-    "ink.handwriting",
-    "ink Handwriting",  # Ajout pour exclure Microsoft Ink Handwriting Recognition
+    "ink handwriting",  # Ajout pour exclure Microsoft Ink Handwriting Recognition
 )
 
 # --- C) Applications in-box Windows 11 (correspondance exacte) ---------------
